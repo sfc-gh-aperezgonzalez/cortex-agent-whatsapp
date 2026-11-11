@@ -59,6 +59,9 @@ Check in parallel and report one table:
    refresh them.
 3. Tools: `python3 --version` (3.9+), `zip`, `aws --version` (must support `add-permission --invoked-via-function-url`).
 4. Meta: does the user already have a Meta developer app with WhatsApp? If not, step 4 covers it.
+5. Network: `curl -s -o /dev/null -w "%{http_code}" https://graph.facebook.com/` from the laptop. Corporate
+   networks sometimes block Facebook; then `meta.py check` and `register` must run from another network,
+   while the Lambda itself is unaffected (see troubleshooting).
 
 ## Step 1 · Choose the agent
 
@@ -151,6 +154,8 @@ snow sql -c <conn> --format json -q "ALTER USER <bot_user> ADD PROGRAMMATIC ACCE
    10 to 30 s, the typing indicator shows meanwhile).
 4. Automated check: `python3 scripts/meta.py e2e <url> <allowed_phone> "a real question" --conn <conn>
    --state <state_db>.<state_schema>` sends a signed inbound event and waits for Meta's `delivered` status.
+   With a phone that is not an allowed recipient it stops with Meta's error 131030 instead: that still proves
+   the webhook, the async worker, the agent call and the Graph API send all work.
 5. Show the user `WA_EVENTS` and `CONVERSATION_MESSAGES` rows as proof, and the measured latency.
 
 ## Step 8 · Hand-off

@@ -29,3 +29,5 @@ aws logs tail /aws/lambda/<FUNCTION_NAME> --since 15m --profile <p> --region <r>
 | Replies take > 60 s or the web chat times out | Agent orchestration is slow (large budget, many tools) | Lower `orchestration.budget.seconds`, simplify tools, warm with a test question |
 | Duplicate replies | Meta retried the webhook; dedup uses `WA_EVENTS.MSG_ID` | Make sure the bot role can `SELECT` on `WA_EVENTS` |
 | Bot replies "I can only read text messages" | User sent audio, image or a sticker | Expected: only text and interactive replies are handled |
+| `meta.py` fails locally with `URLError` / "Couldn't connect" to `graph.facebook.com` | The laptop's network (corporate firewall or VPN) blocks Facebook. The Lambda is not affected | Run `meta.py` from another network, or rely on the Lambda: a signed `meta.py e2e` that ends in a Meta error code (for example 131030) proves the Lambda reaches the Graph API |
+| `meta.py e2e` says "Meta rejected the send" with 131030 | You used a phone number that is not an allowed recipient | Expected when testing with a fake number; use an allowed number to get a real delivery |

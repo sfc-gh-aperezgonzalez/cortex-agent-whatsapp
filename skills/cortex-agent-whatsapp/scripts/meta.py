@@ -140,6 +140,10 @@ def e2e(s, url, phone, text, conn=None, state=None):
         rows = q(f"""WITH inbound AS (SELECT MIN(TS) AS T0 FROM {state}.WA_EVENTS WHERE EVENT_TYPE = 'inbound' AND MSG_ID = '{msg_id}')
                     SELECT e.EVENT_TYPE, e.MSG_ID, e.STATUS, e.ERROR FROM {state}.WA_EVENTS e, inbound
                      WHERE e.TS >= inbound.T0 AND e.PHONE = '{phone}' ORDER BY e.TS""")
+        rejected = [r for r in rows if r["EVENT_TYPE"] == "outbound" and r["STATUS"] != "accepted"]
+        if rejected:
+            print(f"agent answered, but Meta rejected the send after {time.time() - t0:.1f}s:", rejected[-1]["ERROR"])
+            return
         out_ids = {r["MSG_ID"] for r in rows if r["EVENT_TYPE"] == "outbound" and r["MSG_ID"]}
         statuses = [(r["STATUS"], r["ERROR"]) for r in rows if r["EVENT_TYPE"] == "status" and r["MSG_ID"] in out_ids]
         errors = [r["ERROR"] for r in rows if r["EVENT_TYPE"] == "worker_error"]

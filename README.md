@@ -221,6 +221,7 @@ aws iam detach-role-policy --role-name <role> --policy-arn arn:aws:iam::aws:poli
 aws iam detach-role-policy --role-name <role> --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
 aws iam delete-role --role-name <role>
 aws secretsmanager delete-secret --secret-id <secret> --force-delete-without-recovery
+aws logs delete-log-group --log-group-name /aws/lambda/<fn>
 ```
 
 ```sql
