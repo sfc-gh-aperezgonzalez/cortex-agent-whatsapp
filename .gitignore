@@ -1,0 +1,12 @@
+# Local deployment settings and secrets: never commit
+deploy.env
+secret.json
+*.env
+!*.env.example
+.cortex-agent-whatsapp/
+
+# Python / OS
+__pycache__/
+*.pyc
+.DS_Store
+*.zip

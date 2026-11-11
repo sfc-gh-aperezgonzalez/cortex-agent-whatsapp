@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Snowflake Cortex Agent on WhatsApp and web chat",
+    "quality_profile": "showcase",
+    "animation": "trace",
+    "viewBox": [1280, 640],
+    "views": [
+      {
+        "id": "web-channel",
+        "label": "Web channel",
+        "focus": ["web", "gw", "agent", "tools"],
+        "note": "The visitor chats on the website; the Lambda calls the Cortex Agent and returns the answer in the same request."
+      },
+      {
+        "id": "whatsapp-channel",
+        "label": "WhatsApp channel",
+        "focus": ["wa", "meta", "gw", "worker", "agent"],
+        "note": "Meta posts the message to the Lambda, which acknowledges at once and replies asynchronously through the Graph API."
+      },
+      {
+        "id": "tools-and-state",
+        "label": "Tools and state",
+        "focus": ["agent", "tools", "proc", "state"],
+        "note": "The agent answers with its tools; the gateway keeps conversation history and webhook events in Snowflake tables."
+      }
+    ]
+  },
+  "components": [
+    { "id": "web", "type": "frontend", "label": "Web visitor", "sublabel": "Chat on your website", "pos": [40, 90], "size": [170, 72] },
+    { "id": "wa", "type": "external", "label": "WhatsApp user", "sublabel": "Their own phone", "brand": "whatsapp", "pos": [40, 320], "size": [170, 72] },
+    { "id": "meta", "type": "cloud", "label": "Meta Cloud API", "sublabel": "WhatsApp Business", "brand": "meta", "pos": [290, 320], "size": [170, 72] },
+    { "id": "gw", "type": "backend", "label": "Lambda gateway", "sublabel": "Public Function URL", "pos": [540, 90], "size": [170, 72] },
+    { "id": "worker", "type": "backend", "label": "WhatsApp worker", "sublabel": "Same Lambda, async", "pos": [540, 320], "size": [170, 72] },
+    { "id": "agent", "type": "backend", "label": "Cortex Agent", "sublabel": "Orchestrates and answers", "brand": "snowflake", "pos": [790, 190], "size": [170, 72] },
+    { "id": "tools", "type": "database", "label": "Analyst / Search", "sublabel": "Semantic views, docs", "pos": [1050, 70], "size": [170, 72] },
+    { "id": "proc", "type": "backend", "label": "Custom tools", "sublabel": "Stored procedures", "pos": [1050, 270], "size": [170, 72] },
+    { "id": "state", "type": "database", "label": "State tables", "sublabel": "History and events", "pos": [790, 400], "size": [170, 72] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "AWS · fixed egress IP (NAT)", "wraps": ["gw", "worker"], "pad": 28 },
+    { "kind": "security-group", "label": "Snowflake · network policy: only the Lambda IP", "wraps": ["agent", "tools", "proc", "state"], "pad": 28 }
+  ],
+  "connections": [
+    { "id": "web-to-gw", "from": "web", "to": "gw", "label": "HTTPS /api/chat", "variant": "emphasis" },
+    { "id": "wa-to-meta", "from": "wa", "to": "meta", "label": "chat", "variant": "emphasis" },
+    { "id": "meta-to-gw", "from": "meta", "to": "gw", "label": "webhook HMAC", "variant": "emphasis", "fromSide": "top", "toSide": "left" },
+    { "id": "gw-to-worker", "from": "gw", "to": "worker", "label": "async", "variant": "dashed", "labelAt": [625, 241] },
+    { "id": "worker-to-meta", "from": "worker", "to": "meta", "label": "reply" },
+    { "id": "gw-to-agent", "from": "gw", "to": "agent", "label": "REST + PAT", "variant": "security" },
+    { "id": "worker-to-agent", "from": "worker", "to": "agent", "label": "REST + PAT", "variant": "security" },
+    { "id": "worker-to-state", "from": "worker", "to": "state", "label": "SQL API", "variant": "dashed" },
+    { "id": "agent-to-tools", "from": "agent", "to": "tools", "label": "text to SQL" },
+    { "id": "agent-to-proc", "from": "agent", "to": "proc", "label": "tool call" }
+  ],
+  "cards": [
+    { "dot": "rose", "title": "Security", "items": ["Service user with a role-restricted PAT", "Network policy: only the Lambda's fixed IP", "Every webhook verified with Meta's HMAC signature"] },
+    { "dot": "cyan", "title": "Measured in a demo", "items": ["Webhook acknowledged in about 2 s", "Agent answer in 11 to 23 s", "Delivered to the phone in about 30 s"] },
+    { "dot": "amber", "title": "Towards production", "items": ["Real business number and approved templates", "Gateway in your own cloud account", "Rate limits and monitoring on the public URL"] }
+  ]
+}
